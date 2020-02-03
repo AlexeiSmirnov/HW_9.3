@@ -13,6 +13,7 @@ public class Main {
         ArrayList<BankStatement> bankStatements = new ArrayList<>();
         List<String> lines = null;
         String contractor = null;
+        String currency = null;
         TreeMap<String, Double> transactions = new TreeMap<>();
         try {
             lines = Files.readAllLines(Paths.get("data/movementList.csv"));
@@ -23,24 +24,30 @@ public class Main {
             String[] fragments = line.split(",");
             String[] subFragments = fragments[5].split("\\s{2,}");
             for (String subFragment : subFragments) {
-                if (subFragment.contains("\\") || subFragment.contains("/")) {
-                    contractor = subFragment;
+                if (subFragment.contains("\\")) {
+                    contractor = subFragment.substring(subFragment.indexOf("\\"));
+                }
+                if (subFragment.contains("/")) {
+                    contractor = subFragment.substring(subFragment.indexOf("/"));
+                }
+                if (subFragment.contains("RUR") || subFragment.contains("EUR") || subFragment.contains("USD")) {
+                    currency = subFragment.substring(0, 3);
                 }
             }
             if (fragments[0].equals("Тип счёта")) {
                 continue;
             }
             if (fragments.length == 8) {
-                bankStatements.add(new BankStatement(contractor, Double.parseDouble(fragments[6]), Double.parseDouble(fragments[7])));
+                bankStatements.add(new BankStatement(contractor + " " + currency, Double.parseDouble(fragments[6]), Double.parseDouble(fragments[7])));
             }
             if (fragments.length == 9) {
-                bankStatements.add(new BankStatement(contractor, Double.parseDouble(fragments[6]), Double.parseDouble(fragments[7].replace("\"", "") + "." + fragments[8].replace("\"", ""))));
+                bankStatements.add(new BankStatement(contractor + " " + currency, Double.parseDouble(fragments[6]), Double.parseDouble(fragments[7].replace("\"", "") + "." + fragments[8].replace("\"", ""))));
             }
 
         }
 
-        System.out.println("Все поступления по счету " + bankStatements.stream().mapToDouble(d -> d.getArrivalMoney()).sum() + "руб.");
-        System.out.println("Все расходы по счету " + bankStatements.stream().mapToDouble(d -> d.getExpenses()).sum()  + "руб.");
+        System.out.println("Все поступления по счету " + bankStatements.stream().mapToDouble(d -> d.getArrivalMoney()).sum() + " руб.");
+        System.out.println("Все расходы по счету " + bankStatements.stream().mapToDouble(d -> d.getExpenses()).sum() + " руб.");
 
         for (BankStatement bankStatement : bankStatements) {
             if (bankStatement.getExpenses() > 0) {
@@ -62,7 +69,7 @@ public class Main {
 
     private static void printMap(Map<String, Double> map) {
         for (String key : map.keySet()) {
-            System.out.println(key + "\t=>\t" + map.get(key)  + "руб.");
+            System.out.println(key + "\t=>\t" + map.get(key) + " руб.");
         }
     }
 }
